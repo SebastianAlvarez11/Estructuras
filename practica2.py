@@ -204,20 +204,30 @@ class DoublyLinkedList:
 
 
 
+class Vehiculo:
+  def __init__(self, placa, tipo, prioridad, revisado):
+    self.placa = placa
+    self.tipo = tipo
+    self.prioridad = prioridad
+    self.revisado = revisado
+
+
+  def __str__(self):
+    return f"{self.placa} - {self.tipo} - {self.prioridad} - {self.revisado}"
+
 via: DoublyLinkedList = DoublyLinkedList()
 
-
-via.append(("RTU128", "auto", 1))
-via.append(("ATJ167", "camion", 4))
-via.append(("TTC497", "moto", 2))
-via.append(("AHA459", "auto", 5))
-via.append(("ATH009", "auto", 2))
-via.append(("AEU123", "moto", 1))
-via.append(("ILH054", "auto", 3))
-via.append(("APL923", "camion", 2))
-via.append(("AFF567", "camion", 5))
-via.append(("RRS109", "moto", 1))
-via.append(("STL043", "camion", 3))
+via.append(Vehiculo("RTU128", "auto", 1, False))
+via.append(Vehiculo("ATJ167", "camion", 4, False))
+via.append(Vehiculo("TTC497", "moto", 2, False))
+via.append(Vehiculo("AHA459", "auto", 5, False))
+via.append(Vehiculo("ATH009", "auto", 2, False))
+via.append(Vehiculo("AEU123", "moto", 1, False))
+via.append(Vehiculo("ILH054", "auto", 3, False))
+via.append(Vehiculo("APL923", "camion", 2, False))
+via.append(Vehiculo("AFF567", "camion", 5, False))
+via.append(Vehiculo("RRS109", "moto", 1, False))
+via.append(Vehiculo("STL043", "camion", 3, False))
 
 
 def paso_preferencial(via: DoublyLinkedList):
@@ -229,8 +239,8 @@ def paso_preferencial(via: DoublyLinkedList):
 
   while current is not None:
     next_node = current.next
-    tipo = current.value[1]
-    prioridad = current.value[2]
+    tipo = current.value.tipo
+    prioridad = current.value.prioridad
 
     if tipo == "moto" and prioridad == 1:
       if current.prev is not None:
@@ -268,8 +278,8 @@ def eliminar_camiones(via:DoublyLinkedList):
 
   while current is not None:
     next_node = current.next
-    tipo = current.value[1]
-    prioridad = current.value[2]
+    tipo = current.value.tipo
+    prioridad = current.value.prioridad
 
     if tipo == "camion" and prioridad > 3:
       if current.prev is not None:
@@ -293,11 +303,11 @@ def simular_accidente(via, placa_inicio, placa_fin):
   current = via.head
   nodo_a = None
   nodo_b = None
-    
+
   while current is not None:
-    if current.value[0] == placa_inicio:
+    if current.value.placa == placa_inicio:
       nodo_a = current
-    if current.value[0] == placa_fin:
+    if current.value.placa == placa_fin:
       nodo_b = current
     current = current.next
 
@@ -321,14 +331,14 @@ def simular_accidente(via, placa_inicio, placa_fin):
 
   contador_eliminados = 0
   vehiculos_intermedios = vehiculo_inicial.next
-    
+
   while vehiculos_intermedios is not None and vehiculos_intermedios != vehiculo_final:
       contador_eliminados += 1
       vehiculos_intermedios = vehiculos_intermedios.next
 
   vehiculo_inicial.next = vehiculo_final
   vehiculo_final.prev = vehiculo_inicial
-    
+
   via.size = via.size - contador_eliminados
 
   print(f"Se eliminaron {contador_eliminados} vehículos entre {placa_inicio} y {placa_fin}.")
@@ -341,9 +351,9 @@ def invertir_orden(via: DoublyLinkedList):
   motos = 0
 
   while current is not None:
-    if current.value[1] == "moto":
+    if current.value.tipo == "moto":
       motos += 1
-    elif current.value[1] == "auto":
+    elif current.value.tipo == "auto":
       autos +=1
     current = current.next
 
@@ -370,15 +380,15 @@ def reorganizar_prioridad(via: DoublyLinkedList):
 
     while current:
       siguiente = current.next
-      if current.prev and current.value[2] < current.prev.value[2]:
+      if current.prev and current.value.prioridad < current.prev.value.prioridad:
         current.prev.next = current.next
         if current.next:
           current.next.prev = current.prev
         else:
           via.tail = current.prev
-        
+
         nodo_temporal = current.prev
-        while nodo_temporal and current.value[2] < nodo_temporal.value[2]:
+        while nodo_temporal and current.value.prioridad < nodo_temporal.value.prioridad:
           nodo_temporal = nodo_temporal.prev
 
         if nodo_temporal is None:
@@ -393,7 +403,7 @@ def reorganizar_prioridad(via: DoublyLinkedList):
           if nodo_temporal.next:
             nodo_temporal.next.prev = current
           nodo_temporal.next = current
-      
+
       current = siguiente
 
 
@@ -420,7 +430,6 @@ print(via)
 print("6. Reorganizar por prioridad:")
 reorganizar_prioridad(via)
 print(via)
-
 
 
 
@@ -568,6 +577,79 @@ class Queue:
     result = [str(nodo.value) for nodo in self.__queue]
     return ' -- '.join(result)
 
+
+
+
+def semaforo_con_cola(via: DoublyLinkedList):
+  colaSemaforo: Queue = Queue()
+  colaRevision: Queue = Queue()
+
+  current = via2.head
+  contador = 0
+  while current is not None and contador < 6:
+    contador += 1
+    if contador <= 6:
+      colaSemaforo.enqueue(current.value)
+    current = current.next
+
+
+  tiempo = 0
+  contador_vehiculos = 0
+  while colaSemaforo.is_empty() == False and contador_vehiculos < 6:
+    vehiculo_actual = colaSemaforo.dequeue()
+    if vehiculo_actual.tipo == "camion" and vehiculo_actual.prioridad > 3 and vehiculo_actual.revisado == False:
+      vehiculo_actual.revisado = True
+      colaRevision.enqueue(vehiculo_actual)
+      print(f"{vehiculo_actual.placa} enviado a revisión")
+      continue
+
+    tiempo += 30
+    contador_vehiculos +=1
+    print(f"{vehiculo_actual.placa} pasó el semáforo en tiempo {tiempo}")
+
+    current = via2.head
+    while current is not None:
+      if current.value == vehiculo_actual:
+        if current.prev is not None:
+          current.prev.next = current.next
+        else:
+          via2.head = current.next
+
+        if current.next is not None:
+          current.next.prev = current.prev
+        else:
+          via2.tail = current.prev
+        break
+
+      current = current.next
+
+
+    while colaRevision.is_empty() == False:
+      colaSemaforo.enqueue(colaRevision.dequeue())
+
+      print(f"Tiempo total: {tiempo}")
+      print(f"Vehículos que pasaron: {contador_vehiculos}")
+
+
+
+via2 = DoublyLinkedList()
+
+via2.append(Vehiculo("RTU128", "auto", 1, False))
+via2.append(Vehiculo("ATJ167", "camion", 4, False))
+via2.append(Vehiculo("TTC497", "moto", 2, False))
+via2.append(Vehiculo("AHA459", "auto", 5, False))
+via2.append(Vehiculo("ATH009", "auto", 2, False))
+via2.append(Vehiculo("AEU123", "moto", 1, False))
+via2.append(Vehiculo("ILH054", "auto", 3, False))
+via2.append(Vehiculo("APL923", "camion", 2, False))
+via2.append(Vehiculo("AFF567", "camion", 5, False))
+via2.append(Vehiculo("RRS109", "moto", 1, False))
+via2.append(Vehiculo("STL043", "camion", 3, False))
+
+
+print("7. Simulación de semáforo con cola de revisión:")
+semaforo_con_cola(via)
+print(via)
 
 
 
